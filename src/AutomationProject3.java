@@ -18,161 +18,154 @@ public class AutomationProject3 {
 
 
         System.setProperty("webdriver.chrome.driver", "/Users/mervegurleyen/Desktop/BrowserDrivers/chromedriver-3");
+
+
         WebDriver driver = new ChromeDriver();
 
+        driver.manage().window().maximize();
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(4000));
+
+//        Navigate to cars.com.
 
         driver.get("https://www.cars.com/");
 
+//        Verify the default selected options for the dropdowns are the following:
 
-        WebElement actualNU = driver.findElement(By.xpath("//select[@id='make-model-search-stocktype']"));
-        Select dropDown1 = new Select(actualNU);
-        String selected1 = dropDown1.getFirstSelectedOption().getText();
-        Assert.assertEquals(selected1,"Certified cars");
+        WebElement newUsed = driver.findElement(By.id("make-model-search-stocktype"));
 
-        WebElement actualMake = driver.findElement(By.xpath("//select[@id='makes']"));
-        Select dropDown2 = new Select(actualMake);
-        String selected2 = dropDown2.getFirstSelectedOption().getText();
-        Assert.assertEquals(selected2,"Volvo");
+        Select select = new Select(newUsed);
 
-        WebElement actualModel = driver.findElement(By.xpath("//select[@id='models']"));
-        Select dropDown3 = new Select(actualModel);
-        String selected3 = dropDown3.getFirstSelectedOption().getText();
-        Assert.assertEquals(selected3,"XC60");
+        WebElement firstSelectedOption = select.getFirstSelectedOption();
 
-        WebElement actualPrice = driver.findElement(By.xpath("//select[@id='make-model-max-price']"));
-        Select dropDown4 = new Select(actualPrice);
-        String selected4 = dropDown4.getFirstSelectedOption().getText();
-        Assert.assertEquals(selected4,"No max price");
+        Assert.assertEquals(firstSelectedOption.getText(), "Certified cars");
 
-        WebElement actualDistance = driver.findElement(By.xpath("//select[@id='make-model-maximum-distance']"));
-        Select dropDown5 = new Select(actualDistance);
-        String selected5 = dropDown5.getFirstSelectedOption().getText();
-        Assert.assertEquals(selected5,"20 miles");
+        Thread.sleep(2000);
 
+//        In the New/used dropdown box, verify that the expected values are the following
+        List<WebElement> options = select.getOptions();
 
-        String[] expectedNU = {"New & used cars","New & certified cars","New cars","Used cars","Certified cars"};
-        List<WebElement> optionsNU = dropDown1.getOptions();
+        List<String> newUsed1 = new ArrayList<>();
 
-        for(int i =0; i<expectedNU.length;i++) {
-
-            Assert.assertEquals((optionsNU.get(i)).getText(),expectedNU[i]);
+        for (WebElement option : options) {
+            newUsed1.add(option.getText());
 
         }
-        Thread.sleep(2000);
-        WebElement newOrUsed = driver.findElement(By.id("make-model-search-stocktype"));
-        Select selectCondition = new Select(newOrUsed);
-        selectCondition.selectByIndex(0);
 
-        new Select(driver.findElement(By.id("make-model-search-stocktype"))).selectByIndex(0);
+//        Choose Used Cars from New/used dropdown
+        select.selectByValue("used");
+
+//        Choose Tesla from Make dropdown
 
         new Select(driver.findElement(By.id("makes"))).selectByVisibleText("Tesla");
 
-        String[] expectedModels = {"All models","Model 3","Model S","Model X","Model Y","Roadster"};
-        List<WebElement> optionsModel = dropDown3.getOptions();
+//        Verify Models dropdown contains the following:
 
-        for(int i =0; i<expectedModels.length;i++) {
+        Select select1 = new Select(driver.findElement(By.id("models")));
 
-            Assert.assertEquals((optionsModel.get(i)).getText(),expectedModels[i]);
+        List<WebElement> options1 = select1.getOptions();
 
+        List<String> TeslaModels = new ArrayList<>();
+
+        for (WebElement webElement : options1) {
+            TeslaModels.add(webElement.getText());
+//            System.out.println(TeslaModels);
         }
 
-        new Select(driver.findElement(By.id("models"))).selectByVisibleText("Model S");
+//        Choose Model S from the dropdown
+
+        select1.selectByValue("tesla-model_s");
+
+//        Choose $100,000 from Price dropdown
 
         new Select(driver.findElement(By.id("make-model-max-price"))).selectByValue("100000");
 
+//        Choose 50 miles from Distance dropdown
+
         new Select(driver.findElement(By.id("make-model-maximum-distance"))).selectByValue("50");
 
-        driver.findElement(By.id("make-model-zip")).sendKeys("22182");
-        driver.findElement(By.xpath("//button[@data-searchtype='make']")).click();
-
-        List<WebElement> numberOfResults = driver.findElements(By.xpath("//a[@class='vehicle-card-link js-gallery-click-link']"));
-        int actualNumberOfResults = 20;
-        Assert.assertEquals(numberOfResults.size(),actualNumberOfResults); //checking if the correct number of results are present
-
-        new Select(driver.findElement(By.id("sort-dropdown"))).selectByValue("list_price"); //sorting by lowest price
-        Thread.sleep(2000);
         Thread.sleep(2000);
 
+//        Enter 22182 for ZIP and click Search
 
+        driver.findElement(By.id("make-model-zip")).clear();
 
-        List<Integer> prices = new ArrayList<>();
-        List<WebElement> fromLowestToHighest = driver.findElements(By.xpath("//span[@class='primary-price']"));
-        for(WebElement price:fromLowestToHighest){
-            Integer formatPrice = Integer.valueOf(price.getText().split("\\$")[1].replace(",", ""));
-            prices.add(formatPrice);
+        driver.findElement(By.id("make-model-zip")).sendKeys("22182" + Keys.ENTER);
+
+        Thread.sleep(2000);
+
+//        In the next Search Results Page, verify that there are 19 results on the page and each search result title contains “Tesla Model S”
+        List<WebElement> elements = driver.findElements(By.xpath("// a[@class = 'vehicle-card-link js-gallery-click-link']"));
+
+        Assert.assertEquals(20, elements.size());
+
+        Thread.sleep(2000);
+
+//Choose Lowest Price from Sort by dropdown and verify that all the results are sorted in ascending order of the price:
+        WebElement element1 = driver.findElement(By.id("sort-dropdown"));
+        Select selection = new Select(element1);
+        selection.selectByValue("list_price");
+
+        Thread.sleep(2000);
+
+//        Choose Highest Mileage from Sort by dropdown and verify that all the results are sorted in descending order
+//        of the mileage:
+        List<WebElement> elements1 = driver.findElements(By.xpath("//span[@class='primary-price']"));
+
+        double priceSelected = 0.0;
+        for (WebElement count : elements1) {
+            Assert.assertTrue(Double.parseDouble(count.getText().replaceAll("[$,]", "")) >= priceSelected);
+            priceSelected = Double.parseDouble(count.getText().replaceAll("[$,]", ""));
         }
 
-        Collections.sort(prices);
-        for(int i =0; i<prices.size();i++) {
+        selection.selectByValue("mileage_desc");
 
-            Assert.assertEquals(Integer.valueOf(fromLowestToHighest.get(i).getText().split("\\$")[1].replace(",", "")),prices.get(i));
-
-        }
-
-        new Select(driver.findElement(By.id("sort-dropdown"))).selectByValue("mileage_desc"); //sorting by lowest price
-        Thread.sleep(2000);
         Thread.sleep(2000);
 
-        List<Integer> mileage = new ArrayList<>();
-        List<WebElement> sortMileage = driver.findElements(By.xpath("//div[@class='vehicle-details']//div[@class='mileage']"));
-        for(WebElement miles : sortMileage){
-            Integer formatMiles = Integer.valueOf(miles.getText().split(" ")[0].replace(",", ""));
-            mileage.add(formatMiles);
-        }
-        Collections.sort(mileage,Collections.reverseOrder());
-        Thread.sleep(2000);
+//        Choose Nearest location from Sort by dropdown and verify that all the results are sorted in ascending order
+//        of the proximity to the current zip (exclude online sellers)
+        List<WebElement> elements2 = driver.findElements(By.xpath("//div[@class='mileage'][contains(text(),' mi.')]"));
 
-        for(int i =0; i<mileage.size();i++) {
-
-            Assert.assertEquals(Integer.valueOf(sortMileage.get(i).getText().split(" ")[0].replace(",", "")),mileage.get(i));
-
-        }
-        Thread.sleep(2000);
-
-        new Select(driver.findElement(By.id("sort-dropdown"))).selectByValue("distance"); //sorting by lowest price
-        Thread.sleep(2000);
-        Thread.sleep(2000);
-
-
-        List<Integer> distance = new ArrayList<>();
-        List<WebElement> sortDistance = driver.findElements(By.xpath("//div[@data-qa='miles-from-user']"));
-        for(WebElement dist : sortDistance){
-            String formatDist = dist.getText();
-            distance.add(Integer.valueOf(formatDist.split(" ")[0]));
+        long milesSelected = 1000000000;
+        for (WebElement webElement : elements2) {
+            Assert.assertTrue(Long.parseLong(webElement.getText().replaceAll("[$,mi. ]", "")) < milesSelected);
+            milesSelected = (Long.parseLong(webElement.getText().replaceAll("[$,mi. ]", "")));
 
         }
 
-        Thread.sleep(1500);
+        selection.selectByValue("distance");
 
-
-        Collections.sort(distance);
-
-        for(int i =0; i<distance.size();i++) {
-
-            String formatDist = sortDistance.get(i).getText();
-            Assert.assertEquals(Integer.valueOf(formatDist.split(" ")[0]),distance.get(i));
-
-        }
-
-        new Select(driver.findElement(By.id("sort-dropdown"))).selectByValue("year"); //sorting by lowest price
-        Thread.sleep(2000);
         Thread.sleep(2000);
 
-        List<Integer> year = new ArrayList<>();
-        List<WebElement> sortYear = driver.findElements(By.xpath("//h2[@class='title']"));
 
-        for(WebElement years : sortYear){
-            Integer formatYears = Integer.valueOf(years.getText().split(" ")[0]);
-            mileage.add(formatYears);
+        List<WebElement> elements3 = driver.findElements(By.xpath("//div[@data-qa='miles-from-user']"));
+
+        int zipSelected = 0;
+        for (WebElement webElement : elements3) {
+            Assert.assertTrue(Integer.parseInt(webElement.getText().substring(0, 4).replaceAll("[$,mi. ]", "")) >= zipSelected);
+            zipSelected = (Integer.parseInt(webElement.getText().substring(0, 4).replaceAll("[$,mi. ]", "")));
+//
         }
-        Collections.sort(year);
 
 
-        for(int i =0; i<year.size();i++) {
+//        Choose Oldest year from Sort by dropdown and verify that all the results are sorted in ascending order of the year
 
-            Assert.assertEquals(Integer.valueOf(sortYear.get(i).getText().split(" ")[0]), year.get(i));
+        selection.selectByValue("year");
+//
+        Thread.sleep(2000);
+
+//
+        List<WebElement> elements4 = driver.findElements(By.xpath("//h2[@class='title'] "));
+
+        int yearSelected = 0;
+        for (WebElement webElement : elements4) {
+
+            Assert.assertTrue(Integer.parseInt(webElement.getText().substring(0, 5).replaceAll("[$,mi. ]", "")) >= yearSelected);
+            yearSelected = (Integer.parseInt(webElement.getText().substring(0, 5).replaceAll("[$,mi. ]", "")));
+
+
         }
+//        Close the browser
         driver.close();
+
     }
 }
